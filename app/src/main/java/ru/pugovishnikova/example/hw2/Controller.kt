@@ -1,5 +1,6 @@
 package ru.pugovishnikova.example.hw2
 
+import android.util.Log
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -20,9 +21,10 @@ object Controller {
     private fun requireService() = client.create(ItemApi::class.java)
 
     fun loadData(callback: (result: GifsResponse?, error: Throwable?) -> Unit) {
-
+        Log.d("MyTag", "in LoadData")
         scope.launch {
             try {
+                Log.d("MyTag", "in scope")
                 val result = requireService().getTrendingGifs()
                 withContext(Dispatchers.Main) {
                     callback(result, null)
