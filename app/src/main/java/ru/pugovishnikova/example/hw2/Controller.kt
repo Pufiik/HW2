@@ -1,24 +1,39 @@
 package ru.pugovishnikova.example.hw2
 
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
-class Controller(api: String): RequestController {
-    private val retrofit = Retrofit.Builder()
-        .baseUrl(api)
-        .addConverterFactory(
-            GsonConverterFactory.create()
-        )
-        .build()
 
-        private val itemApi = retrofit.create(ItemApi::class.java)
-        override suspend fun requestItem(): Result {
-            val response = itemApi.item()
-            return if (response.isSuccessful){
-                response.body()?.let{
-                    Result.Ok(it)
-                }?:Result.Error("Empty item")
-            } else {
-                Result.Error(response.code().toString())
+object Controller {
+
+    val scope = CoroutineScope(Dispatchers.IO)
+
+    private val client = Retrofit.Builder()
+        .baseUrl("https://giphy.p.rapidapi.com")
+        .addConverterFactory(GsonConverterFactory.create())
+        .build()
+    //отправка запроса
+
+    private fun requireService() = client.create(ItemApi::class.java)
+
+    fun loadData(callback: (result: GifsResponse?, error: Throwable?) -> Unit) {
+
+        scope.launch {
+            try {
+                val result = requireService().getTrendingGifs()
+                withContext(Dispatchers.Main) {
+                    callback(result, null)
+                }
+
+            } catch (e: Throwable) {
+                withContext(Dispatchers.Main) {
+                    callback(null, e)
+                }
             }
         }
+    }
+
 }
